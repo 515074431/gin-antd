@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
+	"github.com/515074431/gin-antd/pkg/setting"
 	"net/http"
 
+	"github.com/515074431/gin-antd/routers"
 	"github.com/gin-gonic/gin"
 )
 
 var db = make(map[string]string)
 
+//路由开始
 func setupRouter() *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
@@ -15,7 +19,10 @@ func setupRouter() *gin.Engine {
 
 	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
+		//c.String(http.StatusOK, "pong")
+		c.JSON(200, gin.H{
+			"message":"pong",
+		})
 	})
 
 	// Get user value
@@ -57,9 +64,20 @@ func setupRouter() *gin.Engine {
 
 	return r
 }
-
+//主程序
 func main() {
-	r := setupRouter()
+	r := routers.SetupRouter()
 	// Listen and Server in 0.0.0.0:8080
-	r.Run(":8080")
+	r.Run(fmt.Sprintf(":%d", setting.HTTPPort))
+	//_ = r.Run()
+
+	//s := &http.Server{
+	//	Addr:fmt.Sprintf(":%d", setting.HTTPPort),
+	//	Handler:r,
+	//	ReadTimeout:setting.ReadTimeout,
+	//	WriteTimeout:setting.WriteTimeout,
+	//	MaxHeaderBytes: 1<<20,
+	//}
+	//
+	//s.ListenAndServe()
 }
