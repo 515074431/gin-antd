@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"github.com/515074431/gin-antd/pkg/setting"
+	"github.com/515074431/gin-antd/routers"
 	"net/http"
 
-	"github.com/515074431/gin-antd/routers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -68,16 +66,23 @@ func setupRouter() *gin.Engine {
 func main() {
 	r := routers.SetupRouter()
 	// Listen and Server in 0.0.0.0:8080
-	r.Run(fmt.Sprintf(":%d", setting.HTTPPort))
-	//_ = r.Run()
+	//r.Run(fmt.Sprintf(":%d", setting.HTTPPort))
+	_ = r.Run()
 
-	//s := &http.Server{
-	//	Addr:fmt.Sprintf(":%d", setting.HTTPPort),
-	//	Handler:r,
-	//	ReadTimeout:setting.ReadTimeout,
-	//	WriteTimeout:setting.WriteTimeout,
-	//	MaxHeaderBytes: 1<<20,
-	//}
-	//
-	//s.ListenAndServe()
+	/*s := &http.Server{
+		Addr:fmt.Sprintf(":%d", setting.HTTPPort),
+		Handler:r,
+		ReadTimeout:setting.ReadTimeout,
+		WriteTimeout:setting.WriteTimeout,
+		MaxHeaderBytes: 1<<20,
+	}
+
+	s.ListenAndServe()*/
+	//http.ListenAndServe(":8080",r)
+
+
+	//http.ListenAndServe(":8080", &webdav.Handler{
+	//	FileSystem: webdav.Dir("."),
+	//	LockSystem: webdav.NewMemLS(),
+	//})
 }

@@ -12,7 +12,8 @@ import (
 var identityKey = "id"
 //设置路由
 func SetupRouter() *gin.Engine {
-	r := gin.New()
+	//r := gin.New()
+	r := gin.Default()
 
 
 
@@ -60,7 +61,16 @@ func SetupRouter() *gin.Engine {
 		apiv1.PUT("/articles/:id", v1.EditArticle)
 		//删除指定文章
 		apiv1.DELETE("/articles/:id", v1.DeleteArticle)
-	}
 
+		//apiv1.GET("/dav2/:file", v1.Dav2)
+		//apiv1.PATCH("/dav/:file",v1.Dav)
+
+		apiv1.Handle("PROPFIND", "/dav/*file", v1.Dav)
+		apiv1.Handle("COPY", "/dav/", v1.Dav)
+
+		//apiv1.Any("/dav/", v1.Dav)
+	}
+	//r.Handle("PROPFIND", "/api/v1/dav/", v1.Dav)
+	//r.Handle("COPY", "/dav/", v1.Dav)
 	return r
 }
