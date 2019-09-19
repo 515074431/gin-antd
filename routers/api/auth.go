@@ -18,33 +18,43 @@ type auth struct {
 }
 
 func GetAuth(c *gin.Context) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-
-	valid := validation.Validation{}
-	a := auth{Username: username, Password: password}
-	ok, _ := valid.Valid(&a)
-
 	data := make(map[string]interface{})
 	code := e.INVALID_PARAMS
-	if ok {
 
-		if isCheck,auth :=  models.CheckAuth(username, password);isCheck {
-			token, err := util.GenerateToken(auth)
-			if err != nil {
-				code = e.ERROR_AUTH_TOKEN
+	var form auth
+	if c.ShouldBind(&form) == nil {
+		log.Println("form", form)
+		log.Println("form", form.Username)
+		log.Println("form", form.Password)
+
+		username := form.Username
+		password := form.Password
+
+		valid := validation.Validation{}
+		ok, _ := valid.Valid(&form)
+
+		if ok {
+
+			if isCheck, auth := models.CheckAuth(username, password); isCheck {
+				token, err := util.GenerateToken(auth)
+				if err != nil {
+					code = e.ERROR_AUTH_TOKEN
+				} else {
+					data["token"] = token
+					data["username"] = username
+					data["currentAuthority"] = "admin" //临时先设置管理员
+
+					code = e.SUCCESS
+				}
+
 			} else {
-				data["token"] = token
-
-				code = e.SUCCESS
+				data["currentAuthority"] = "guest"
+				code = e.ERROR_AUTH
 			}
-
 		} else {
-			code = e.ERROR_AUTH
-		}
-	} else {
-		for _, err := range valid.Errors {
-			log.Println(err.Key, err.Message)
+			for _, err := range valid.Errors {
+				log.Println(err.Key, err.Message)
+			}
 		}
 	}
 

@@ -36,7 +36,7 @@ func SetupRouter() *gin.Engine {
 		context.String(http.StatusOK, "Hello gin")
 	})
 	//获取权限
-	r.GET("/auth",api.GetAuth)
+	r.POST("/api/v1/account",api.GetAuth)
 
 	//r.POST("/login", authMiddleware.LoginHandler)
 	apiv1 := r.Group("/api/v1")
@@ -62,13 +62,21 @@ func SetupRouter() *gin.Engine {
 		//删除指定文章
 		apiv1.DELETE("/articles/:id", v1.DeleteArticle)
 
-		//apiv1.GET("/dav2/:file", v1.Dav2)
-		//apiv1.PATCH("/dav/:file",v1.Dav)
-
+		//WEBDAV方法
 		apiv1.Handle("PROPFIND", "/dav/*file", v1.Dav)
-		apiv1.Handle("COPY", "/dav/", v1.Dav)
+		//apiv1.Handle("PUR", "/dav/*file", v1.Dav)
+		apiv1.Handle("COPY", "/dav/*file", v1.Dav)
+		apiv1.Handle("MOVE", "/dav/*file", v1.Dav)
+		apiv1.Handle("PUT", "/dav/*file", v1.Dav)
+		apiv1.Handle("DELETE", "/dav/*file", v1.Dav)
+		apiv1.Handle("POST", "/dav/*file", v1.Dav)
+		apiv1.Handle("MKCOL", "/dav/*file", v1.Dav)
+		apiv1.Handle("LOCK", "/dav/*file", v1.Dav)
+		apiv1.Handle("UNLOCK", "/dav/*file", v1.Dav)
+		apiv1.Handle("PROPPATCH", "/dav/*file", v1.Dav)
+		apiv1.Handle("OPTIONS", "/dav/*file", v1.Dav)
 
-		//apiv1.Any("/dav/", v1.Dav)
+		//apiv1.Any("/dav/*file", v1.Dav)
 	}
 	//r.Handle("PROPFIND", "/api/v1/dav/", v1.Dav)
 	//r.Handle("COPY", "/dav/", v1.Dav)
