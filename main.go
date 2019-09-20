@@ -78,11 +78,4 @@ func main() {
 	}
 
 	s.ListenAndServe()*/
-	//http.ListenAndServe(":8080",r)
-
-
-	//http.ListenAndServe(":8080", &webdav.Handler{
-	//	FileSystem: webdav.Dir("."),
-	//	LockSystem: webdav.NewMemLS(),
-	//})
 }

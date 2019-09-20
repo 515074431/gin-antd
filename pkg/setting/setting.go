@@ -1,7 +1,7 @@
 package setting
 
 import (
-	"github.com/lexkong/log"
+	"log"
 	"time"
 
 	"gopkg.in/ini.v1"
