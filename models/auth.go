@@ -8,7 +8,7 @@ type Auth struct {
 //var UserInfo *Auth
 //检查权限
 func CheckAuth(username, password string) (isCheck bool,UserInfo Auth) {
-	db.Select("*").Where(Auth{Username: username, Password: password}).First(&UserInfo)
+	Db.Select("*").Where(Auth{Username: username, Password: password}).First(&UserInfo)
 	if UserInfo.ID > 0 {
 		isCheck = true
 		}

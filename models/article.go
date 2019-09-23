@@ -2,12 +2,10 @@ package models
 
 import (
 	"github.com/jinzhu/gorm"
-	
-	"time"
 )
 
 type Article struct {
-	Model
+	gorm.Model
 	TagID int `json:"tag_id" gorm:"index"`
 	Tag Tag `json:"tag"`
 	
@@ -22,7 +20,7 @@ type Article struct {
 
 func ExistArticleByID(id int) bool {
 	var article Article
-	db.Select("id").Where("id = ?", id).First(&article)
+	Db.Select("id").Where("id = ?", id).First(&article)
 
 	if article.ID > 0 {
 		return true
@@ -32,32 +30,32 @@ func ExistArticleByID(id int) bool {
 }
 
 func GetArticleTotal(maps interface {}) (count int){
-	db.Model(&Article{}).Where(maps).Count(&count)
+	Db.Model(&Article{}).Where(maps).Count(&count)
 
 	return
 }
 
 func GetArticles(pageNum int, pageSize int, maps interface {}) (articles []Article) {
-	db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
+	Db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
 
 	return
 }
 
 func GetArticle(id int) (article Article) {
-	db.Where("id = ?", id).First(&article)
-	db.Model(&article).Related(&article.Tag)
+	Db.Where("id = ?", id).First(&article)
+	Db.Model(&article).Related(&article.Tag)
 
 	return
 }
 
 func EditArticle(id int, data interface {}) bool {
-	db.Model(&Article{}).Where("id = ?", id).Updates(data)
+	Db.Model(&Article{}).Where("id = ?", id).Updates(data)
 
 	return true
 }
 
 func AddArticle(data map[string]interface {}) bool {
-	db.Create(&Article {
+	Db.Create(&Article {
 		TagID : data["tag_id"].(int),
 		Title : data["title"].(string),
 		Desc : data["desc"].(string),
@@ -70,19 +68,7 @@ func AddArticle(data map[string]interface {}) bool {
 }
 
 func DeleteArticle(id int) bool {
-	db.Where("id = ?", id).Delete(Article{})
+	Db.Where("id = ?", id).Delete(Article{})
 
 	return true
-}
-
-
-func (article *Article) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("CreatedOn", time.Now().Unix())
-	return nil
-}
-
-func (article *Article) BeforeUpdate(scope *gorm.Scope) error {
-	scope.SetColumn("ModifiedOn", time.Now().Unix())
-
-	return nil
 }

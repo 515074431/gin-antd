@@ -17,9 +17,11 @@ type auth struct {
 	Password string `valid:"Required; MaxSize(50)"`
 }
 
+
+
 func GetAuth(c *gin.Context) {
 	data := make(map[string]interface{})
-	code := e.INVALID_PARAMS
+	result := e.Result{}
 
 	var form auth
 	if c.ShouldBind(&form) == nil {
@@ -38,30 +40,29 @@ func GetAuth(c *gin.Context) {
 			if isCheck, auth := models.CheckAuth(username, password); isCheck {
 				token, err := util.GenerateToken(auth)
 				if err != nil {
-					code = e.ERROR_AUTH_TOKEN
+					result.Code = e.ERROR_UNAUTHORIZED
 				} else {
 					data["token"] = token
 					data["username"] = username
 					data["currentAuthority"] = "admin" //临时先设置管理员
 
-					code = e.SUCCESS
+					result.Code = e.SUCCESS
+					result.Data = data
 				}
 
 			} else {
 				data["currentAuthority"] = "guest"
-				code = e.ERROR_AUTH
+				result.Code = e.ERROR_FORBIDDEN
+				result.Data = data
 			}
 		} else {
 			for _, err := range valid.Errors {
 				log.Println(err.Key, err.Message)
 			}
+			result.Error = valid.Errors
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code" : code,
-		"msg" : e.GetMsg(code),
-		"data" : data,
-	})
+	c.JSON(http.StatusOK, result)
 }
 

@@ -27,6 +27,8 @@ func SetupRouter() *gin.Engine {
 	r.GET("/", func(context *gin.Context) {
 		context.String(http.StatusOK, "Hello gin")
 	})
+	//用户注册
+	r.POST("/api/v1/register",api.UserRegister)
 	//获取权限
 	r.POST("/api/v1/account", api.GetAuth)
 
