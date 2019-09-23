@@ -1,15 +1,10 @@
 package v1
 
 import (
+	"github.com/515074431/gin-antd/pkg/webdav"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/net/webdav"
 	"log"
 )
-
-type Webdav  struct {
-	fs webdav.Handler
-
-}
 
 func Dav(c *gin.Context) {
 	//c.Request.Method = "PROPFIND"
