@@ -23,6 +23,18 @@ type User struct {
 func (User) TableName() string {
 	return "profiles"
 }
+
+func  UserFindByName(username string) (err error,user User) {
+	 err = Db.Where(&User{Username:username}).First(&user).Error
+	return
+}
+
+func UserFindById(id string) (err error,user User)  {
+	err = Db.First(&user,id).Error
+	return
+}
+
+
 //注册模型
 type Register struct {
 	Email string ` form:"email" json:"email"  binding:"email"`

@@ -37,8 +37,8 @@ func GetAuth(c *gin.Context) {
 
 		if ok {
 
-			if isCheck, auth := models.CheckAuth(username, password); isCheck {
-				token, err := util.GenerateToken(auth)
+			if err, user := models.CheckAuth(username,password); err == nil {
+				token, err := util.GenerateToken(user)
 				if err != nil {
 					result.Code = e.ERROR_UNAUTHORIZED
 				} else {

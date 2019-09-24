@@ -1,12 +1,14 @@
 package jwt
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/515074431/gin-antd/models"
 	"github.com/515074431/gin-antd/pkg/e"
 	"github.com/515074431/gin-antd/pkg/util"
 )
@@ -28,13 +30,26 @@ func JWT() gin.HandlerFunc {
 			code = e.ERROR_UNAUTHORIZED
 		} else {
 			claims, err := util.ParseToken(token)
-			// 继续交由下一个路由处理,并将解析出的信息传递下去
-			c.Set("Identify", claims)
+
 			if err != nil {
 				code = e.ERROR_FORBIDDEN
 			} else if time.Now().Unix() > claims.ExpiresAt {
 				code = e.ERROR_FORBIDDEN
+			}else {
+				if err,user :=models.UserFindByName(claims.Audience); err == nil  {
+					log.Println("user:",user)
+					if user.UpdatedAt.Unix() > claims.IssuedAt{ //更新时间大于生效时间，需要重新登录
+						code = e.ERROR_FORBIDDEN
+					}else{
+						c.Set("Identify", claims)
+						log.Println("claims: ",claims)
+					}
+				}else{
+					code = e.ERROR_UNAUTHORIZED
+				}
 			}
+
+
 		}
 		if code != e.SUCCESS {
 			result := e.Result{
