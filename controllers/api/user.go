@@ -4,7 +4,6 @@ import (
 	"github.com/515074431/gin-antd/models"
 	"github.com/515074431/gin-antd/pkg/e"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 func UserRegister(c *gin.Context) {
@@ -13,8 +12,6 @@ func UserRegister(c *gin.Context) {
 	result := e.NewDefaultResult()
 
 	if err := c.ShouldBind(&register); err != nil {
-		log.Println(err)
-		log.Println(err.Error())
 		result.Message = err.Error()
 		result.Code = e.ERROR
 		c.JSON(result.Code,result)
@@ -30,7 +27,7 @@ func UserRegister(c *gin.Context) {
 			"role":     user.Role,
 			"err":      err,}
 
-		log.Println(err)
+
 	} else {
 
 		result.Code = e.ERROR

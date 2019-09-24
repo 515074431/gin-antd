@@ -1,7 +1,6 @@
 package jwt
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -37,12 +36,11 @@ func JWT() gin.HandlerFunc {
 				code = e.ERROR_FORBIDDEN
 			}else {
 				if err,user :=models.UserFindByName(claims.Audience); err == nil  {
-					log.Println("user:",user)
 					if user.UpdatedAt.Unix() > claims.IssuedAt{ //更新时间大于生效时间，需要重新登录
 						code = e.ERROR_FORBIDDEN
 					}else{
-						c.Set("Identify", claims)
-						log.Println("claims: ",claims)
+						c.Set("Identify", user)
+						c.Set("User", user)
 					}
 				}else{
 					code = e.ERROR_UNAUTHORIZED

@@ -25,10 +25,6 @@ func GetAuth(c *gin.Context) {
 
 	var form auth
 	if c.ShouldBind(&form) == nil {
-		log.Println("form", form)
-		log.Println("form", form.Username)
-		log.Println("form", form.Password)
-
 		username := form.Username
 		password := form.Password
 
