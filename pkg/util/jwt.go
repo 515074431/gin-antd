@@ -20,7 +20,9 @@ type Claims struct {
 
 func GenerateToken(user models.User) (string, error) {
 	nowTime := time.Now()
-	expireTime := nowTime.Add(3 * time.Hour)
+	tokenExpireHour :=setting.TokenExpireHour
+	expireTime := nowTime.Add(time.Duration(tokenExpireHour) * time.Hour)
+	//expireTime := nowTime.Add(setting.TokenExpireHour * time.Hour)
 	claims := jwt.StandardClaims{
 		ExpiresAt: expireTime.Unix(),                  // 失效时间
 		Audience:  user.Username,                      // 受众
