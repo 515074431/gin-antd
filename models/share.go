@@ -12,6 +12,7 @@ import (
 type Share struct {
 	gorm.Model
 	ShareType sql.NullInt64
+	ShareRoot string	`gorm:"type:varchar(255)"`//分享到的根
 	ShareWith string	`gorm:"type:varchar(50)"`
 	Password string	`gorm:"type:varchar(32)"`
 	UidOwner string `gorm:"type:varchar(50)"`
@@ -35,15 +36,16 @@ type Share struct {
 
 
 }
-
-func ShareList(path string)  []Share{
-	if path == "" {
-		return []Share{
-			{},
-		}
+//获取根目录下的分享文件列表
+func ShareRootList(path string) (shares []Share,err error){
+	//var shares [] Share
+	result :=Db.Where("share_root = ?",path).Find(&shares)
+	if result.Error !=nil{
+		err = result.Error
 	}
-	return []Share{}
+	return
 }
+//获取文件的分享信息
 func ShareInfo(path string) (sh Share,err error)  {
 
 	err = errors.New("没有分享信息")
