@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"github.com/LyricTian/gin-admin/pkg/errors"
 	"github.com/jinzhu/gorm"
-	"log"
 	"path/filepath"
 	"time"
 )
@@ -51,7 +50,7 @@ func ShareInfo(path string) (sh Share,err error)  {
 	err = errors.New("没有分享信息")
 	var shares [] Share
 	result :=Db.Where("item_target IN (?)",spitList(path)).Find(&shares)
-	log.Println("shares array:",shares)
+	//log.Println("shares array:",shares)
 	if result.Error !=nil{
 		return
 	}

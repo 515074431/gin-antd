@@ -47,18 +47,23 @@ func (this *WebdavFile) Readdir(count int) ([]os.FileInfo, error) {
 	log.Println("Readdir 请求的目录：", this.path, this.baseDir, this.reqName, this.Name())
 	if this.reqName == this.baseDir { //根目录下去获取分享的文件
 		log.Println("是根目录请求：", this.baseDir, this.reqName, this.path)
-		//if shareFiles, err := ShareRootList(this.reqName); err == nil { //找到分享的文件了
-		//	for _, shareFile := range shareFiles {
-		//		log.Println("ShareFile :", shareFile)
-		//		shareFileStr := filepath.Join(this.Dir, shareFile.FileSource, shareFile.FileTarget)
-		//		log.Println("ShareFileStr :", shareFileStr)
-		//		if shareFileInfo, err := os.Stat(shareFileStr); err == nil {
-		//			log.Println("ShareFileInfo :", shareFileInfo)
-		//			this.files = append(this.files, shareFileInfo)
-		//		}
-		//
-		//	}
-		//}
+		if shareFiles, err := ShareRootList(this.reqName); err == nil { //找到分享的文件了
+			for _, shareFile := range shareFiles {
+				log.Println("ShareFile :", shareFile)
+				shareFileStr := filepath.Join(this.Dir, shareFile.FileSource, shareFile.FileTarget)
+				log.Println("ShareFileStr :", shareFileStr)
+
+				if shareFileInfo, err := os.Stat(shareFileStr); err == nil {
+					log.Println("ShareFileInfo :", shareFileInfo)
+
+
+
+
+					this.files = append(this.files, shareFileInfo)
+				}
+
+			}
+		}
 
 	}
 	log.Println("WebdavFile->files", this.files)

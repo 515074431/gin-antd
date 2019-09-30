@@ -58,6 +58,7 @@ func SetupRouter() *gin.Engine {
 
 		//WEBDAV方法
 		apiv1.Handle("PROPFIND", "/dav/*file", apiV1.Dav)
+		apiv1.Handle("PROPFIND", "/webdav/*file", apiV1.WebDav)
 		//apiv1.Handle("PUR", "/dav/*file", v1.Dav)
 		apiv1.Handle("COPY", "/dav/*file", apiV1.Dav)
 		apiv1.Handle("MOVE", "/dav/*file", apiV1.Dav)

@@ -7,7 +7,9 @@ package webdav
 import (
 	"context"
 	"encoding/xml"
+	"github.com/515074431/gin-antd/models"
 	"io"
+	//"log"
 	"net/http"
 	"os"
 	"path"
@@ -54,6 +56,12 @@ type File interface {
 	io.Writer
 }
 
+type file struct {
+	fread  *os.File
+	fwrite *os.File
+	files  []os.FileInfo
+}
+
 // A Dir implements FileSystem using the native file system restricted to a
 // specific directory tree.
 //
@@ -62,7 +70,16 @@ type File interface {
 // separated by filepath.Separator, which isn't necessarily '/'.
 //
 // An empty Dir is treated as ".".
-type Dir string
+type Dir struct {
+	Context     context.Context //请求
+	RootPath    string          //根目录
+	User        models.User     //用户
+	Owner       string          //所有者
+	BaseReqPath string          // 基本请求路径
+	ReqPath     string          //请求路径(或share分享)
+	RelPath     string          //真实路径(或share分享)
+	file        file            //具体文件
+}
 
 func (d Dir) resolve(name string) string {
 	// This implementation is based on Dir.Open's code in the standard net/http package.
@@ -70,11 +87,27 @@ func (d Dir) resolve(name string) string {
 		strings.Contains(name, "\x00") {
 		return ""
 	}
-	dir := string(d)
-	if dir == "" {
-		dir = "."
+	rootPath := d.RootPath
+	if rootPath == "" {
+		rootPath = "."
 	}
-	return filepath.Join(dir, filepath.FromSlash(slashClean(name)))
+	if d.Owner == "" {
+		d.Owner = d.User.Username
+	}
+	//log.Println("NAME 1:",name)
+	if shareRecord, err := models.ShareInfo(name); err == nil {
+		d.Owner = shareRecord.FileSource   //分享的用户原始目录
+		d.RelPath = shareRecord.FileTarget //请求的真实路径=请求的路径 替换 分享部分的路径 为真实的路径
+		d.ReqPath = shareRecord.ItemTarget //请求的路径
+		name = strings.Replace(name, shareRecord.ItemTarget, shareRecord.FileTarget, 1)
+	} else {
+		d.RelPath = name
+		d.ReqPath = name
+	}
+	//name = d.RelPath
+	//log.Println("NAME 2:",name)
+
+	return filepath.Join(rootPath, d.Owner, filepath.FromSlash(slashClean(name)))
 }
 
 func (d Dir) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
@@ -85,9 +118,11 @@ func (d Dir) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
 }
 
 func (d Dir) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (File, error) {
+	//log.Println("OpenFile:,name,d.BaseReqPath,d.RelPath,d.ReqPath,d.Owner,d.User.Username  ::",name,d.BaseReqPath,d.RelPath,d.ReqPath,d.Owner,d.User.Username)
 	if name = d.resolve(name); name == "" {
 		return nil, os.ErrNotExist
 	}
+	//log.Println("OpenFile: ",name)
 	f, err := os.OpenFile(name, flag, perm)
 	if err != nil {
 		return nil, err
@@ -99,7 +134,7 @@ func (d Dir) RemoveAll(ctx context.Context, name string) error {
 	if name = d.resolve(name); name == "" {
 		return os.ErrNotExist
 	}
-	if name == filepath.Clean(string(d)) {
+	if name == filepath.Clean(d.RootPath) {
 		// Prohibit removing the virtual root directory.
 		return os.ErrInvalid
 	}
@@ -113,7 +148,7 @@ func (d Dir) Rename(ctx context.Context, oldName, newName string) error {
 	if newName = d.resolve(newName); newName == "" {
 		return os.ErrNotExist
 	}
-	if root := filepath.Clean(string(d)); root == oldName || root == newName {
+	if root := filepath.Clean(d.RootPath); root == oldName || root == newName {
 		// Prohibit renaming from or to the virtual root directory.
 		return os.ErrInvalid
 	}
@@ -121,9 +156,11 @@ func (d Dir) Rename(ctx context.Context, oldName, newName string) error {
 }
 
 func (d Dir) Stat(ctx context.Context, name string) (os.FileInfo, error) {
+	//log.Println("Dir->Stat: name,d.ReqPath,d.RelPath,d.Owner,d.User ::",name,d.ReqPath,d.RelPath,d.Owner,d.User.Username)
 	if name = d.resolve(name); name == "" {
 		return nil, os.ErrNotExist
 	}
+	//log.Println("Dir->Stat: name,",name)
 	return os.Stat(name)
 }
 
@@ -748,7 +785,9 @@ func copyFiles(ctx context.Context, fs FileSystem, src, dst string, overwrite bo
 // Allowed values for depth are 0, 1 or infiniteDepth. For each visited node,
 // walkFS calls walkFn. If a visited file system node is a directory and
 // walkFn returns filepath.SkipDir, walkFS will skip traversal of this node.
-func walkFS(ctx context.Context, fs FileSystem, depth int, name string, info os.FileInfo, walkFn filepath.WalkFunc) error {
+func  WalkFS(ctx context.Context, fs *Dir, depth int, name string, info os.FileInfo,isRoot bool, walkFn func(reqPath string, info os.FileInfo, err error) error) error {
+	//log.Println("fs.RelPath,fs.ReqPath,fs.BaseReqPath,name,info.Name()::",fs.RelPath,fs.ReqPath,fs.BaseReqPath,name,info.Name())
+	//name = strings.Replace(name,fs.RelPath,fs.ReqPath,1)//用请求的路径替换真实路径
 	// This implementation is based on Walk's code in the standard path/filepath package.
 	err := walkFn(name, info, nil)
 	if err != nil {
@@ -783,7 +822,7 @@ func walkFS(ctx context.Context, fs FileSystem, depth int, name string, info os.
 				return err
 			}
 		} else {
-			err = walkFS(ctx, fs, depth, filename, fileInfo, walkFn)
+			err = WalkFS(ctx, fs, depth, filename, fileInfo,false, walkFn)
 			if err != nil {
 				if !fileInfo.IsDir() || err != filepath.SkipDir {
 					return err
@@ -791,5 +830,31 @@ func walkFS(ctx context.Context, fs FileSystem, depth int, name string, info os.
 			}
 		}
 	}
+	//log.Println("dir  name, fs.ReqPath, fs.RelPath, fs.BaseReqPath : ", name, fs.ReqPath, fs.RelPath, fs.BaseReqPath)
+	if isRoot {//是根目录  取出共享的信息
+		if shares, err := models.ShareRootList(name); err == nil {
+			//log.Println("shares root: ",shares)
+			for _, share := range shares {
+				//err = d.WalkFS(ctx, fs, depth, filename, fileInfo, walkFn)
+				shareRootDir := fs
+				shareRootDir.Owner = share.FileSource
+				shareRootDir.ReqPath = share.ItemTarget//请求地址为 分享地址+分享名字
+				shareRootDir.RelPath = share.FileTarget
+				//log.Println("WalkFS : shareRootDir ::",shareRootDir.Owner,shareRootDir.ReqPath,shareRootDir.RelPath)
+
+				if fi, err := shareRootDir.Stat(ctx, share.ItemTarget); err == nil {
+
+					err = WalkFS(ctx, shareRootDir, depth, share.FileTarget, fi,false, walkFn)
+					if err != nil {
+						if !fi.IsDir() || err != filepath.SkipDir {
+							return err
+						}
+					}
+				}
+			}
+		}
+
+	}
+
 	return nil
 }
