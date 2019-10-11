@@ -2,7 +2,7 @@ package models
 
 import (
 	"database/sql"
-	"github.com/LyricTian/gin-admin/pkg/errors"
+	"errors"
 	"github.com/jinzhu/gorm"
 	"path/filepath"
 	"time"
