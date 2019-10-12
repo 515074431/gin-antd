@@ -258,20 +258,29 @@ func (this WebdavFileSystem) Name() string {
 }
 
 func (this WebdavFileSystem) Size() int64 {
-	if this.fread == nil {
-		return 0
+	path := this.resolve(this.path)
+	s, err := os.Stat(path)
+	if err == nil {
+		return s.Size()
 	}
-	if info, err := this.fread.Stat(); err == nil {
-		return info.Size()
-	}
-	return 0
+	return  0
 }
 
 func (this WebdavFileSystem) Mode() os.FileMode {
+	path := this.resolve(this.path)
+	s, err := os.Stat(path)
+	if err == nil {
+		return s.Mode()
+	}
 	return 0
 }
 
 func (this WebdavFileSystem) ModTime() time.Time {
+	path := this.resolve(this.path)
+	s, err := os.Stat(path)
+	if err == nil {
+		return s.ModTime()
+	}
 	return time.Now()
 }
 func (this WebdavFileSystem) IsDir() bool {
@@ -284,6 +293,11 @@ func (this WebdavFileSystem) IsDir() bool {
 }
 
 func (this WebdavFileSystem) Sys() interface{} {
+	path := this.resolve(this.path)
+	s, err := os.Stat(path)
+	if err == nil {
+		return s.Sys()
+	}
 	return nil
 }
 
