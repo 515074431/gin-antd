@@ -60,6 +60,18 @@ func SetupRouter() *gin.Engine {
 		apiv1.Handle("PROPFIND", "/dav/*file", apiV1.Dav)
 		apiv1.Handle("PROPFIND", "/webdav/*file", apiV1.WebDav)
 		apiv1.Handle("PROPFIND", "/webdav2/*file", apiV1.WebDav2)
+
+		apiv1.Handle("PUT", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("DELETE", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("POST", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("MOVE", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("COPY", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("MKCOL", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("LOCK", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("UNLOCK", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("PROPPATCH", "/webdav/*file", apiV1.WebDav)
+		apiv1.Handle("OPTIONS", "/webdav/*file", apiV1.WebDav)
+
 		//apiv1.Handle("PUR", "/dav/*file", v1.Dav)
 		apiv1.Handle("COPY", "/dav/*file", apiV1.Dav)
 		apiv1.Handle("MOVE", "/dav/*file", apiV1.Dav)

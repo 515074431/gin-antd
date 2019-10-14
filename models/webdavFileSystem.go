@@ -4,6 +4,7 @@ import (
 	"context"
 	"golang.org/x/net/webdav"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,12 +34,6 @@ func (this WebdavFs) resolve(name string) string  {
 	return filepath.Join(path,filepath.FromSlash(slashClean(name)))
 }
 func (this WebdavFs) Mkdir(ctx context.Context, name string, perm os.FileMode) error{
-	if name = this.resolve(name); name == "" {
-		return os.ErrNotExist
-	}
-	return os.Mkdir(name, perm)
-}
-func (this WebdavFs) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error){
 	webdavFile := WebdavFileSystem{
 		prefix:this.prefix,
 		rootPath:this.rootPath,
@@ -48,17 +43,43 @@ func (this WebdavFs) OpenFile(ctx context.Context, name string, flag int, perm o
 		ShareRootList:this.ShareRootList,
 		ShareInfo:this.ShareInfo,
 	}
-	return webdavFile, nil
+	return webdavFile.Mkdir(ctx,name, perm)
+}
+func (this WebdavFs) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error){
+
+	webdavFile := WebdavFileSystem{
+		prefix:this.prefix,
+		rootPath:this.rootPath,
+		userRoot:this.User.Username,
+		path:name,
+		requestRoot:this.requestRoot,
+		ShareRootList:this.ShareRootList,
+		ShareInfo:this.ShareInfo,
+	}
+	log.Println("flag: ",flag)
+	//if fwrite,err := webdavFile.OpenFile(name,flag,perm);err == nil{
+	//	webdavFile.fwrite = fwrite
+	//	//return fwrite,nil
+	//}
+	//return webdavFile, nil
+	_,err := webdavFile.OpenFile(name,flag,perm)
+	if err ==nil {
+		return webdavFile,nil
+	}
+	return nil,err
+
 }
 func (this WebdavFs) RemoveAll(ctx context.Context, name string) error{
-	if name = this.resolve(name); name == "" {
-		return os.ErrNotExist
+	webdavFile := WebdavFileSystem{
+		prefix:this.prefix,
+		rootPath:this.rootPath,
+		userRoot:this.User.Username,
+		path:name,
+		requestRoot:this.requestRoot,
+		ShareRootList:this.ShareRootList,
+		ShareInfo:this.ShareInfo,
 	}
-	if name == filepath.Clean(this.rootPath) {
-		// Prohibit removing the virtual root directory.
-		return os.ErrInvalid
-	}
-	return os.RemoveAll(name)
+	return webdavFile.RemoveAll(ctx, name)
 }
 func (this WebdavFs) Rename(ctx context.Context, oldName, newName string) error{
 	if oldName = this.resolve(oldName); oldName == "" {
@@ -177,11 +198,16 @@ func (this WebdavFileSystem) Seek(offset int64, whence int) (int64, error) {
 	}
 	return a, nil
 }
-func (this WebdavFileSystem) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
+func (this *WebdavFileSystem) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
 	name = this.resolve(name)
 	f, err := os.OpenFile(name, flag, perm)
 	if err != nil {
 		return nil, err
+	}
+	if flag == 0 {
+		this.fread = f
+	}else {
+		this.fwrite = f
 	}
 	return f,nil
 }
@@ -196,7 +222,7 @@ func (this WebdavFileSystem) Readdir(count int) (files []os.FileInfo, err error)
 
 	for _, fileInfo := range f {
 		fs := this
-		fs.path = fileInfo.Name()
+		fs.path = filepath.Join(this.path,fileInfo.Name())
 
 		files = append(files,fs)
 	}
@@ -242,7 +268,27 @@ func (this WebdavFileSystem) Stat() (os.FileInfo, error) {
 	}
 	return this, nil
 }
-
+func (this WebdavFileSystem) Mkdir(ctx context.Context, name string, perm os.FileMode) error{
+	path := this.resolve(this.path)
+	return  os.Mkdir(path,perm)
+}
+func (this WebdavFileSystem) RemoveAll(ctx context.Context, name string) error{
+	path := this.resolve(this.path)
+	return  os.RemoveAll(path)
+}
+func (this WebdavFileSystem) Rename(ctx context.Context, oldName, newName string) error{
+	if oldName = this.resolve(oldName); oldName == "" {
+		return os.ErrNotExist
+	}
+	if newName = this.resolve(newName); newName == "" {
+		return os.ErrNotExist
+	}
+	if root := filepath.Clean(this.rootPath); root == oldName || root == newName {
+		// Prohibit renaming from or to the virtual root directory.
+		return os.ErrInvalid
+	}
+	return os.Rename(oldName, newName)
+}
 func (this WebdavFileSystem) Write(p []byte) (int, error) {
 	if this.fwrite == nil {
 		return 0, os.ErrNotExist
