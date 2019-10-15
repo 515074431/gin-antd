@@ -82,17 +82,17 @@ func (this WebdavFs) RemoveAll(ctx context.Context, name string) error{
 	return webdavFile.RemoveAll(ctx, name)
 }
 func (this WebdavFs) Rename(ctx context.Context, oldName, newName string) error{
-	if oldName = this.resolve(oldName); oldName == "" {
-		return os.ErrNotExist
+
+	webdavFile := WebdavFileSystem{
+		prefix:this.prefix,
+		rootPath:this.rootPath,
+		userRoot:this.User.Username,
+		path:oldName,
+		requestRoot:this.requestRoot,
+		ShareRootList:this.ShareRootList,
+		ShareInfo:this.ShareInfo,
 	}
-	if newName = this.resolve(newName); newName == "" {
-		return os.ErrNotExist
-	}
-	if root := filepath.Clean(this.rootPath); root == oldName || root == newName {
-		// Prohibit renaming from or to the virtual root directory.
-		return os.ErrInvalid
-	}
-	return os.Rename(oldName, newName)
+	return webdavFile.Rename(ctx, oldName, newName)
 }
 func (this *WebdavFs) Stat(ctx context.Context, name string) (os.FileInfo, error){
 	webdavFile := WebdavFileSystem{
