@@ -27,6 +27,20 @@ func SetupRouter() *gin.Engine {
 	r.GET("/", func(context *gin.Context) {
 		context.String(http.StatusOK, "Hello gin")
 	})
+	r.GET("/api/auth-routes", func(context *gin.Context) {
+		//authRoutes := `{"/":{"authority":["admin","user"]}}`
+		//str := `{"/":{"authority":["admin","user"]}}`
+		//authRoutes :=
+		//json.Unmarshal([]byte(str),authRoutes)
+		authRoutes := map[string]map[string][]string{"/":{"authority":{"admin","user"}}}
+		context.JSON(http.StatusOK,authRoutes)
+	})
+	r.GET("/api/current-user", func(context *gin.Context) {
+		//currentUser := map[string]interface{}
+		str := `{"name":"David Fang","avatar":"https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png","userid":"00000001","email":"fangmw@lichengsoft.com","signature":"海纳百川，有容乃大","title":"交互专家","group":"励铖软件－建筑云盘技术部－研发工程师","tags":[{"key":"0","label":"很有想法的"},{"key":"1","label":"专注设计"},{"key":"2","label":"辣~"},{"key":"3","label":"大长腿"},{"key":"4","label":"川妹子"},{"key":"5","label":"海纳百川"}],"notifyCount":12,"unreadCount":11,"country":"China","geographic":{"province":{"label":"上海市","key":"310000"},"city":{"label":"静安区","key":"310100"}},"address":"新闸路848号6楼","phone":"021-268888888"}`
+		context.String(http.StatusOK,str)
+
+	})
 	//用户注册
 	r.POST("/api/v1/register",api.UserRegister)
 	//获取权限
@@ -71,6 +85,17 @@ func SetupRouter() *gin.Engine {
 		apiv1.Handle("UNLOCK", "/webdav/*file", apiV1.WebDav)
 		apiv1.Handle("PROPPATCH", "/webdav/*file", apiV1.WebDav)
 		apiv1.Handle("OPTIONS", "/webdav/*file", apiV1.WebDav)
+
+		apiv1.Handle("PUT", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("DELETE", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("POST", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("MOVE", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("COPY", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("MKCOL", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("LOCK", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("UNLOCK", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("PROPPATCH", "/webdav2/*file", apiV1.WebDav2)
+		apiv1.Handle("OPTIONS", "/webdav2/*file", apiV1.WebDav2)
 
 		//apiv1.Handle("PUR", "/dav/*file", v1.Dav)
 		apiv1.Handle("COPY", "/dav/*file", apiV1.Dav)

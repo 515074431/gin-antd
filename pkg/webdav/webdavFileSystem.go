@@ -1,8 +1,8 @@
-package models
+package webdav
 
 import (
 	"context"
-	"golang.org/x/net/webdav"
+	"github.com/515074431/gin-antd/models"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,11 +14,11 @@ type WebdavFs struct {
 	rootPath       string//根目录
 	prefix 			string //请求前缀
 	requestRoot     string //请求根目录
-	User        *User     //用户
+	User        *models.User     //用户
 	Context     context.Context //请求
 	webdavFile *WebdavFileSystem
-	ShareRootList []Share  //根目录下的分享文件列表
-	ShareInfo *Share //请求根目录的分享信息
+	ShareRootList []models.Share  //根目录下的分享文件列表
+	ShareInfo *models.Share //请求根目录的分享信息
 }
 
 func (this WebdavFs) resolve(name string) string  {
@@ -32,6 +32,7 @@ func (this WebdavFs) resolve(name string) string  {
 	}
 	return filepath.Join(path,filepath.FromSlash(slashClean(name)))
 }
+
 func (this WebdavFs) Mkdir(ctx context.Context, name string, perm os.FileMode) error{
 	webdavFile := WebdavFileSystem{
 		prefix:this.prefix,
@@ -44,7 +45,7 @@ func (this WebdavFs) Mkdir(ctx context.Context, name string, perm os.FileMode) e
 	}
 	return webdavFile.Mkdir(ctx,name, perm)
 }
-func (this WebdavFs) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error){
+func (this WebdavFs) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (File, error){
 
 	webdavFile := WebdavFileSystem{
 		prefix:this.prefix,
@@ -108,11 +109,11 @@ func (this *WebdavFs) Stat(ctx context.Context, name string) (os.FileInfo, error
 /**
 rootPath 根目录, prefix 请求前缀,requestRoot 请求根目录， User 用户, Context context.Context 请求信息
  */
-func NewWebdavFs( rootPath string, prefix string,requestRoot string, User User, Context context.Context) *WebdavFs {
+func NewWebdavFs( rootPath string, prefix string,requestRoot string, User models.User, Context context.Context) *WebdavFs {
 	//获取根目录下的分享文件列表
-	ShareRootList,_ := ShareRootList(requestRoot)
+	ShareRootList,_ := models.ShareRootList(requestRoot)
 	//分享文件及其子目录
-	shareInfo, err :=ShareInfo(requestRoot)
+	shareInfo, err :=models.ShareInfo(requestRoot)
 
 	webdavFs := WebdavFs{
 		prefix: prefix,
@@ -139,8 +140,8 @@ type WebdavFileSystem struct {
 	fread   *os.File
 	fwrite  *os.File
 
-	ShareRootList []Share  //根目录下的分享文件列表
-	ShareInfo *Share //请求根目录的分享信息
+	ShareRootList []models.Share  //根目录下的分享文件列表
+	ShareInfo *models.Share //请求根目录的分享信息
 }
 func (this WebdavFileSystem) resolve(name string) string  {
 	if filepath.Separator != '/' && strings.IndexRune(name, filepath.Separator) >= 0 ||

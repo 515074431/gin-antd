@@ -22,8 +22,7 @@ type Handler struct {
 	// Prefix is the URL path prefix to strip from WebDAV resource paths.
 	Prefix string
 	// FileSystem is the virtual file system.
-	//FileSystem FileSystem
-	FileSystem *Dir
+	FileSystem FileSystem
 	// LockSystem is the lock management system.
 	LockSystem LockSystem
 	// Logger is an optional error logger. If non-nil, it will be called
@@ -325,9 +324,10 @@ func (h *Handler) handleCopyMove(w http.ResponseWriter, r *http.Request) (status
 	if err != nil {
 		return http.StatusBadRequest, errInvalidDestination
 	}
-	if u.Host != r.Host {
-		return http.StatusBadGateway, errInvalidDestination
-	}
+	//Todo 重构这个方法，这一点多余的
+	//if u.Host != r.Host {
+	//	return http.StatusBadGateway, errInvalidDestination
+	//}
 
 	src, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
@@ -534,9 +534,8 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 	}
 
 	mw := multistatusWriter{w: w}
-
+	log.Println("pf: ",pf)
 	walkFn := func(reqPath string, info os.FileInfo, err error) error {
-		log.Println("reqPath,info.Name(),h.FileSystem.ReqPath,h.FileSystem.RelPath,h.FileSystem.RootPath: ",reqPath,info.Name(),h.FileSystem.ReqPath,h.FileSystem.RelPath,h.FileSystem.RootPath)
 		if err != nil {
 			return err
 		}
@@ -559,25 +558,20 @@ func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status
 		if err != nil {
 			return err
 		}
-		//name := strings.Replace(reqPath,h.FileSystem.RelPath,h.FileSystem.ReqPath,1)//用请求的路径替换真实路径
-		//href := path.Join(h.Prefix, name)
-
-		//href := path.Join(h.Prefix, h.FileSystem.ReqPath)
 		href := path.Join(h.Prefix, reqPath)
 		if info.IsDir() {
 			href += "/"
 		}
+		log.Println("pstats:",pstats)
 		return mw.write(makePropstatResponse(href, pstats))
 	}
 
-	walkErr := WalkFS(ctx, h.FileSystem, depth, reqPath, fi,true, walkFn)
+	walkErr := walkFS(ctx, h.FileSystem, depth, reqPath, fi, walkFn)
 	closeErr := mw.close()
 	if walkErr != nil {
-		log.Println("walkErr: ",walkErr)
 		return http.StatusInternalServerError, walkErr
 	}
 	if closeErr != nil {
-		log.Println("closeErr: ",closeErr)
 		return http.StatusInternalServerError, closeErr
 	}
 	return 0, nil
