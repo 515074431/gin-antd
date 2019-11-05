@@ -148,7 +148,7 @@ var liveProps = map[xml.Name]struct {
 		// modification time and size. This is not a reliable synchronization
 		// mechanism for directories, so we do not advertise getetag for DAV
 		// collections.
-		dir: false,
+		dir: true,
 	},
 
 	// TODO: The lockdiscovery property requires LockSystem to list the

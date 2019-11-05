@@ -347,16 +347,16 @@ func (this WebdavFileSystem) Sys() interface{} {
 	return nil
 }
 
-/*func (this WebdavFile) ETag(ctx context.Context) (string, error) {
+/*func (this WebdavFileSystem) ETag(ctx context.Context) (string, error) {
 	// Building an etag can be an expensive call if the data isn't available locally.
 	// => 2 etags strategies:
 	// - use a legit etag value when the data is already in our cache
 	// - use a dummy value that's changing all the time when we don't have much info
-
-	etag := Hash(fmt.Sprintf("%d%s", this.ModTime().UnixNano(), this.path), 20)
+	//fmt.Sprintf(`"%x%x"`, fi.ModTime().UnixNano(), fi.Size())
+	etag := fmt.Sprintf("%d%s", this.ModTime().UnixNano(), this.Size())
 	if this.fread != nil {
 		if s, err := this.fread.Stat(); err == nil {
-			etag = Hash(fmt.Sprintf(`"%x%x"`, this.path, s.Size()), 20)
+			etag = fmt.Sprintf(`"%d%x"`, this.ModTime().UnixNano(), s.Size())
 		}
 	}
 	return etag, nil
